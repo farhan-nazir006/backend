@@ -7,7 +7,7 @@ const connectDb = async () => {
     console.log("Start connecting mongo");
     
 
-    const connectionInstance = await mongoose.connect(`mongodb://localhost:27017/videotube`)
+    const connectionInstance = await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`)
 
     console.log("MongoDb Connected successfuly !! " , connectionInstance.connection.host);
     

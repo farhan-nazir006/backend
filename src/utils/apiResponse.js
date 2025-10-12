@@ -1,4 +1,5 @@
 class apiResponse {
+
   constructor(
     statuscode , data , message = "success"
   ) {

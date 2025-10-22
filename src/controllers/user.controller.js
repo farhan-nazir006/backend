@@ -2,7 +2,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinay.js";
-
+import {apiResponse} from "../utils/apiResponse.js"
+ 
 const registerUser = asyncHandler(async (req, res, next) => {
   // get user details from frontend
   // validation - not empty
@@ -17,13 +18,12 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
   // get user details from frontend
   const { fullName, email, password, username } = req.body
-  //  console.log(email);
 
   // validation - not empty
   if (
     [fullName, email, username, password].some((field) => field?.trim() === "")
   ) {
-    throw new ApiError(400, "All fields are required")
+    throw new apiError(400, "All fields are required")
   }
 
 
@@ -34,22 +34,28 @@ const registerUser = asyncHandler(async (req, res, next) => {
   })
 
   if (existedUser) {
-    throw new ApiError(409, "User with email or username already exists")
+    throw new apiError(409, "User with email or username already exists")
   }
 
   // check for images, check for avatar
+  // console.log(req.files);
+  
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  let coverImageLocalPath ; 
+  if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0 ) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+  }
 
   if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar file is required")
+    throw new apiError(400, "Avatar file is required")
   }
   // upload them to cloudinary, avatar
   const avatar = await uploadOnCloudinary(avatarLocalPath)
   const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
   if (!avatar) {
-    throw new ApiError(400, "Avatar file is required")
+    throw new apiError(400, "Avatar file is required")
   }
 
   // create user object - create entry in db
@@ -69,16 +75,20 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
   // check for user creation
   if (!createdUser) {
-    throw new ApiError(500, "Something went wrong while registering the user")
+    throw new apiError(500, "Something went wrong while registering the user")
   }
+
 
   // return res
 
   return res.status(201).json(
-    new ApiResponse(200, createdUser, "User registered Successfully")
+    new apiResponse(200, createdUser, "User registered Successfully")
   )
 
 
 })
 
-export { registerUser };
+
+
+
+export { registerUser};

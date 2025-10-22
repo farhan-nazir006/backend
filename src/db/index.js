@@ -5,9 +5,9 @@ const connectDb = async () => {
 
   try {
 
-   // const connectionInstance = await mongoose.connect(`${process.env.MONGODB_URI}${DB_NAME}`)
+    // const connectionInstance = await mongoose.connect(`${process.env.MONGODB_URI}${DB_NAME}`)
     
-   //Local
+  //  //Local
     const connectionInstance = await mongoose.connect(`mongodb://localhost:27017/videotube`)
 
     console.log("MongoDb Connected successfuly !! " , connectionInstance.connection.host);

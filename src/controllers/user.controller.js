@@ -112,8 +112,8 @@ const loginUser = asyncHandler(async (req, res) => {
   // send res
 
   const { username, password, email } = req.body;
-  console.log(req.body);
-  
+  // console.log(req.body);
+
 
   if (!username || !email) {
     throw new apiError(400, "Username or email must required")
@@ -139,18 +139,52 @@ const loginUser = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: true
   }
-return res
+  return res
+    .status(200)
+    .cookie("accesToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json({
+      message: "User login successfully",
+      user: loggedInUser, accessToken, refreshToken,
+    });
+
+})
+
+const logoutUser = asyncHandler(async (req, res) => {
+  // we need user id to get logged in user . for this we'll use middleware 
+
+  await User.findOneAndUpdate(
+    req.user._id , 
+    {
+      $unset : {
+        refreshToken : 1 // this will remove this field
+      }
+    },
+    {
+      new: true
+    }
+  )
+
+  const options = {
+    httpOnly: true,
+    secure: true
+  }
+
+  return res
   .status(200)
-  .cookie("accesToken", accessToken, options)
-  .cookie("refreshToken", refreshToken, options)
-  .json({
-    message: "User login successfully",
-    user: loggedInUser , accessToken , refreshToken,
-  });
+  .clearCookie("accesToken" , options)
+  .clearCookie("refreshToken" , options)
+  .json(
+    new apiResponse(
+      200,
+      {},
+      "User Log out Succesfulyy"
+    )
+  )
 
 })
 
 
 
 
-export { registerUser, loginUser };
+export { registerUser, loginUser, logoutUser };

@@ -372,6 +372,83 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 })
 
 
+const getUserProfileDetails = asyncHandler ( async (req , res) => {
+      const {username} = req.params 
+
+      if (!username) {
+        throw new apiError(400 , "User does not exist")
+      }
+
+     const channel = await User.aggregate([  // returns array
+        {
+          $match : {  // Now this stage result will be used as input for all next stages 
+            username : username?.toLowerCase(),
+          }
+        },
+        {
+          $lookup : {
+            from : "subscriptions",
+            localField: "_id",
+            foreignField: "channel",
+            as : "subscribers"
+          }
+        },
+        {
+          $lookup : {
+            from : "subscriptions",
+            localField: "_id",
+            foreignField: "subscriber",
+            as : "subscriberTO"
+          }
+        },
+        {
+          $addFields : {
+            subscribersCount : {
+              $size : "$subscribers" // $ use bcx this is field now 
+            },
+            channelsSubscribedToCount : {
+              $size : "$subscriberTO"
+            },
+            isSubscribed : {
+              $cond : {
+                if : { $in : [req.user?._id , "$subscribers.subscriber"]},
+                then: true,
+                else : false
+              }
+            }
+          }
+        },
+        {
+          $project : {
+            fullName : 1 ,
+            email : 1 ,
+            username : 1 ,
+            subscribersCount : 1 ,
+            channelsSubscribedToCount : 1 ,
+            avatar : 1 ,
+            coverImage : 1 ,
+            isSubscribed : 1 ,
+          }
+        }
+      ])
+
+      if (!channel?.length) {
+        throw new apiError (404 , "Channel does not exist")
+      }
+
+      return res
+      .status(200)
+      .json(
+        new apiResponse (
+          200,
+          channel[0],
+          "Channel details fetched successfully"
+        )
+      )
+
+} )
+
+
 export {
   registerUser,
   loginUser,
@@ -381,5 +458,6 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
-  getCurrentUser
+  getCurrentUser,
+  getUserProfileDetails
 };
